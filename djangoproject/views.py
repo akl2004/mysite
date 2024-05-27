@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from .models import Gender, User
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password
+from django.shortcuts import render, redirect, get_object_or_404
 
 # Create your views here.
 
@@ -104,3 +105,53 @@ def store_user(request):
     else:
         messages.error(request, 'Password do not match')
         return redirect('/user/create')
+    
+def show_user(request, user_id):
+    user = User.objects.get(pk = user_id)
+
+    context = {
+        'user' : user,
+    }
+
+    return render(request, 'user/show.html', context)
+
+def edit_user(request, user_id):
+    genders=Gender.objects.all()
+    user = User.objects.select_related('gender').get(pk = user_id)
+
+    context = {
+        'user' : user,
+        'genders' : genders,
+    }
+
+    return render(request, 'user/edit.html', context)
+
+def update_user(request, user_id):
+    first_name = request.POST.get('first_name')
+    middle_name = request.POST.get('middle_name')
+    last_name = request.POST.get('last_name')
+    age = request.POST.get('age')
+    birth_date = request.POST.get('birth_date')
+    gender_id = request.POST.get('gender_id')
+    username = request.POST.get('username')
+    
+    User.objects.filter(pk=user_id).update(first_name=first_name, middle_name=middle_name, last_name=last_name, age=age, birth_date=birth_date, gender_id=gender_id, username=username)
+
+    messages.success(request, 'User successfully updated!')
+    return redirect('/users')
+    
+
+def delete_user(request, user_id):
+    user = User.objects.get(pk = user_id)
+
+    context = {
+        'user' : user,
+    }
+
+    return render(request, 'user/delete.html', context)
+
+def destroy_user(request, user_id):
+    User.objects.filter(pk = user_id).delete() #DELETE FROM genders Where gender_id = gender_id
+    messages.success(request, 'User successfully deleted.')
+
+    return redirect('/users')
